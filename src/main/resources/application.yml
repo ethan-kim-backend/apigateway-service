@@ -10,6 +10,11 @@ eureka:
 spring:
   application:
     name: apigateway-service
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
   cloud:
     gateway:
       default-filters:
@@ -52,6 +57,15 @@ spring:
             #class 이름이 들어가야함
             - AuthorizationHeaderFilter
 
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Method=GET, POST
+            - Path=/user-service/actuator/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment}
+
         - id: catalog-service
           uri: lb://CATALOG-SERVICE
           predicates:
@@ -62,8 +76,9 @@ spring:
           predicates:
             - Path=/order-service/**
 
-token:
-  secret: user_token
+
+#token:
+#  secret: user_token
 
 #        - id: first-service
 #          uri: lb://MY-FIRST-SERVICE
@@ -87,3 +102,8 @@ token:
 #                postLogger: true
 ##            - AddRequestHeader=second-request, second-request-header2
 ##            - AddResponseHeader=second-response, second-response-header2
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh, health, beans, httptrace, busrefresh
